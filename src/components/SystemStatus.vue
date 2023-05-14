@@ -1,102 +1,45 @@
 <template>
   <div>
-    <el-card>
-      <el-row>
-        <el-col :span="12">
-          <el-chart :options="cpuOptions" style="height: 300px"></el-chart>
-        </el-col>
-        <el-col :span="12">
-          <el-chart :options="memoryOptions" style="height: 300px"></el-chart>
-        </el-col>
-      </el-row>
-      <el-row>
-        <el-col :span="12">
-          <el-chart :options="diskOptions" style="height: 300px"></el-chart>
-        </el-col>
-        <el-col :span="12">
-          <el-chart :options="networkOptions" style="height: 300px"></el-chart>
-        </el-col>
-      </el-row>
-    </el-card>
+    <h2>System Information</h2>
+    <div v-if="systemInfo">
+      <h3>CPU Usage</h3>
+      <el-progress :percentage="systemInfo.cpuUsage"></el-progress>
+      <h3>Memory Usage</h3>
+      <el-progress
+        :percentage="(systemInfo.usedMemory / systemInfo.totalMemory) * 100"
+      ></el-progress>
+      <!-- Add more progress bars as necessary for other data -->
+    </div>
+    <div v-else>
+      <p>Loading...</p>
+    </div>
   </div>
 </template>
 
 <script>
+import { ElProgress } from "element-plus";
 import axios from "axios";
-import { Pie } from "vue-chartjs";
 
 export default {
-  extends: Pie,
+  components: {
+    ElProgress,
+  },
   data() {
     return {
-      cpuOptions: {},
-      memoryOptions: {},
-      diskOptions: {},
-      networkOptions: {},
+      systemInfo: null,
     };
   },
-  mounted() {
-    this.fetchData();
-  },
-  methods: {
-    fetchData() {
-      axios
-        .get("http://localhost:3000/api/system")
-        .then((response) => {
-          const systemData = response.data;
-          this.setCpuData(systemData.cpuOccupancy);
-          this.setMemoryData(systemData.memoryOccupancy);
-          this.setDiskData(systemData.diskOccupancy);
-          this.setNetworkData(systemData.networkOccupancy);
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-        });
-    },
-    setCpuData(occupancy) {
-      this.cpuOptions = {
-        labels: ["Occupied", "Free"],
-        datasets: [
-          {
-            data: [occupancy, 100 - occupancy],
-            backgroundColor: ["#FF6384", "#36A2EB"],
-          },
-        ],
-      };
-    },
-    setMemoryData(occupancy) {
-      this.memoryOptions = {
-        labels: ["Occupied", "Free"],
-        datasets: [
-          {
-            data: [occupancy, 100 - occupancy],
-            backgroundColor: ["#FF6384", "#36A2EB"],
-          },
-        ],
-      };
-    },
-    setDiskData(occupancy) {
-      this.diskOptions = {
-        labels: ["Occupied", "Free"],
-        datasets: [
-          {
-            data: [occupancy, 100 - occupancy],
-            backgroundColor: ["#FF6384", "#36A2EB"],
-          },
-        ],
-      };
-    },
-    setNetworkData(occupancy) {
-      this.networkOptions = {
-        labels: ["Occupied", "Free"],
-        datasets: [
-          {
-            data: [occupancy, 100 - occupancy],
-            backgroundColor: ["#FF6384", "#36A2EB"],
-          },
-        ],
-      };
-    },
+  async created() {
+    try {
+      const response = await axios.get("/systemInfo");
+      this.systemInfo = response.data;
+    } catch (error) {
+      console.error(error);
+    }
   },
 };
 </script>
+
+<style scoped>
+/* Add your styles here */
+</style>
