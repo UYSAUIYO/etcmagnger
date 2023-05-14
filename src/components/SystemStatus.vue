@@ -1,47 +1,71 @@
 <template>
   <div>
-    <el-progress
-      type="line"
-      :percentage="formatPercentage(systemInfo.cpuUsage)"
-      :status="progressStatus(systemInfo.cpuUsage)"
-    >
-    </el-progress>
-    <span>{{ formatPercentage(systemInfo.cpuUsage) }}% CPU Usage</span>
-    <!-- Repeat for other metrics as necessary -->
+    <h1>System Information</h1>
+    <div>
+      <h2>CPU Usage</h2>
+      <el-progress type="circle" :percentage="cpuUsage"></el-progress>
+    </div>
+    <div>
+      <h2>Memory Usage</h2>
+      <el-progress type="circle" :percentage="memoryUsage"></el-progress>
+    </div>
   </div>
 </template>
 
-<script>
-import { ElProgress } from "element-plus";
+<script lang="ts">
+import { ref, onMounted, onUnmounted } from "vue";
 import axios from "axios";
+import { ElProgress } from "element-plus";
 
 export default {
   components: {
     ElProgress,
   },
-  data() {
-    return {
-      systemInfo: {},
+  setup() {
+    const cpuUsage = ref<number>(0);
+    const memoryUsage = ref<number>(0);
+
+    let intervalId: number;
+
+    const fetchSystemInfo = async () => {
+      const response = await axios.get("/api/systeminfo");
+      const data = response.data;
+      cpuUsage.value = data.cpu.currentload;
+      memoryUsage.value = (data.memory.used / data.memory.total) * 100;
     };
-  },
-  methods: {
-    getSystemInfo() {
-      axios.get("https://localhost:3000/api/systemInfo").then((response) => {
-        this.systemInfo = response.data;
-      });
-    },
-    progressStatus(value) {
-      if (value < 50) return "success";
-      if (value < 80) return "warning";
-      return "exception";
-    },
-    formatPercentage(value) {
-      return value.toFixed(2);
-    },
-  },
-  mounted() {
-    this.getSystemInfo();
-    setInterval(this.getSystemInfo, 5000); // Refresh every 5 seconds
+
+    onMounted(() => {
+      fetchSystemInfo();
+      intervalId = setInterval(fetchSystemInfo, 5000);
+    });
+
+    onUnmounted(() => {
+      clearInterval(intervalId);
+    });
+
+    return {
+      cpuUsage,
+      memoryUsage,
+    };
   },
 };
 </script>
+
+<style scoped>
+h1 {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+div {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 80vh;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+</style>
