@@ -1,18 +1,13 @@
 <template>
   <div>
-    <h2>System Information</h2>
-    <div v-if="systemInfo">
-      <h3>CPU Usage</h3>
-      <el-progress :percentage="systemInfo.cpuUsage"></el-progress>
-      <h3>Memory Usage</h3>
-      <el-progress
-        :percentage="(systemInfo.usedMemory / systemInfo.totalMemory) * 100"
-      ></el-progress>
-      <!-- Add more progress bars as necessary for other data -->
-    </div>
-    <div v-else>
-      <p>Loading...</p>
-    </div>
+    <el-progress
+      type="line"
+      :percentage="formatPercentage(systemInfo.cpuUsage)"
+      :status="progressStatus(systemInfo.cpuUsage)"
+    >
+    </el-progress>
+    <span>{{ formatPercentage(systemInfo.cpuUsage) }}% CPU Usage</span>
+    <!-- Repeat for other metrics as necessary -->
   </div>
 </template>
 
@@ -26,20 +21,27 @@ export default {
   },
   data() {
     return {
-      systemInfo: null,
+      systemInfo: {},
     };
   },
-  async created() {
-    try {
-      const response = await axios.get("/systemInfo");
-      this.systemInfo = response.data;
-    } catch (error) {
-      console.error(error);
-    }
+  methods: {
+    getSystemInfo() {
+      axios.get("https://localhost:3000/api/systemInfo").then((response) => {
+        this.systemInfo = response.data;
+      });
+    },
+    progressStatus(value) {
+      if (value < 50) return "success";
+      if (value < 80) return "warning";
+      return "exception";
+    },
+    formatPercentage(value) {
+      return value.toFixed(2);
+    },
+  },
+  mounted() {
+    this.getSystemInfo();
+    setInterval(this.getSystemInfo, 5000); // Refresh every 5 seconds
   },
 };
 </script>
-
-<style scoped>
-/* Add your styles here */
-</style>
