@@ -6,10 +6,10 @@
       :percentage="item.percentage"
       :text-inside="true"
       :stroke-width="18"
-      type="circle"
+      type="dashboard"
       :color="getProgressBarColor(item.percentage)"
     >
-      {{ item.label }}
+      <div>{{ item.label }}</div>
     </el-progress>
   </div>
 </template>
@@ -26,7 +26,7 @@ export default {
         { label: "Network", percentage: 0 },
         { label: "Disk", percentage: 0 },
       ],
-      statusColors: {
+      statusThresholds: {
         success: 30,
         warning: 60,
         danger: 100,
@@ -39,42 +39,44 @@ export default {
   },
   methods: {
     getProgressBarColor(percentage) {
-      if (percentage <= this.statusColors.success) {
+      if (percentage <= this.statusThresholds.success) {
         return "success";
-      } else if (percentage <= this.statusColors.warning) {
+      } else if (percentage <= this.statusThresholds.warning) {
         return "warning";
       } else {
         return "danger";
       }
     },
-    getSystemInfo: async function () {
+    async getSystemInfo() {
       try {
         const response = await axios.get(
           "http://localhost:3000/api/systeminfo"
-        ); // 根据实际的后端路由进行修改
+        );
         const { cpu, diskLayout, memory, networkStats } = response.data;
 
-        this.systemInfo = [
-          {
-            label: "CPU",
-            percentage: parseFloat(cpu.currentload),
-          },
-          {
-            label: "Memory",
-            percentage:
-              (parseFloat(memory.used) / parseFloat(memory.total)) * 100,
-          },
-          {
-            label: "Network",
-            percentage: parseFloat(networkStats[0].tx_sec) / 1000, // 以 KB/s 为单位显示
-          },
-          {
-            label: "Disk",
-            percentage: parseFloat(diskLayout[0].use),
-          },
-        ];
+        if (cpu && cpu.currentload !== undefined) {
+          this.systemInfo = [
+            {
+              label: "CPU",
+              percentage: parseFloat(cpu.currentload.toFixed(2)),
+            },
+            {
+              label: "Memory",
+              percentage:
+                (parseFloat(memory.used) / parseFloat(memory.total)) * 100,
+            },
+            {
+              label: "Network",
+              percentage: parseFloat(networkStats[0].tx_sec.toFixed(2)) / 1000,
+            },
+            {
+              label: "Disk",
+              percentage: parseFloat(diskLayout[0].use.toFixed(2)),
+            },
+          ];
+        }
       } catch (error) {
-        console.error("获取系统信息出错：", error);
+        console.error("Failed to retrieve system information:", error);
       }
     },
   },
