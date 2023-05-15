@@ -39,16 +39,13 @@
       </el-col>
       <el-col :span="6">
         <el-card>
-          <div class="card-header">Disk Usage</div>
-          <div v-for="disk in diskUsage" :key="disk.name">
-            <div>{{ disk.name }}</div>
-            <el-progress
-              type="circle"
-              :percentage="disk.use"
-              :stroke-width="8"
-              :color="getProgressColor(disk.use)"
-              :format="formatPercentage"
-            ></el-progress>
+          <div class="card-header">Server Info</div>
+          <div>
+            <div>Hostname: {{ serverInfo.hostname }}</div>
+            <div>Type: {{ serverInfo.type }}</div>
+            <div>Platform: {{ serverInfo.platform }}</div>
+            <div>Arch: {{ serverInfo.arch }}</div>
+            <div>Release: {{ serverInfo.release }}</div>
           </div>
         </el-card>
       </el-col>
@@ -62,21 +59,24 @@ import axios from "axios";
 
 export default {
   name: "PerformanceDashboard",
-  components: {
-    // Import Element Plus components if necessary
-    // e.g., ElRow, ElCol, ElCard, ElProgressCircle
+  components: {},
+  data() {
+    return {
+      serverInfo: {},
+    };
   },
   setup() {
     const cpuUsage = ref(0);
     const memoryUsage = ref(0);
     const networkTraffic = ref(0);
     const diskUsage = ref([]);
+    const serverInfo = ref({});
 
     const formatPercentage = (percentage) => {
       if (Number.isInteger(percentage)) {
         return `${percentage}%`;
       } else {
-        return percentage.toFixed(2) + "%";
+        return parseFloat(percentage).toFixed(2) + "%";
       }
     };
 
@@ -112,14 +112,15 @@ export default {
           "http://localhost:3000/api/systeminfo"
         );
         const systemInfo = response.data;
-        cpuUsage.value = systemInfo.cpu.currentload;
+        cpuUsage.value = systemInfo.cpu.currentLoad;
         memoryUsage.value =
           (systemInfo.memory.used / systemInfo.memory.total) * 100;
         networkTraffic.value = systemInfo.networkStats[0].tx_sec;
-        diskUsage.value = systemInfo.diskLayout.map((disk) => ({
-          name: disk.name,
-          use: disk.use,
-        }));
+        // diskUsage.value = systemInfo.diskLayout.map((disk) => ({
+        //   name: disk.name,
+        //   use: disk.use,
+        // }));
+        serverInfo.value = systemInfo.serverInfo;
       } catch (error) {
         console.error("Failed to retrieve system information:", error.message);
       }
@@ -137,11 +138,3 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-.card-header {
-  font-size: 18px;
-  font-weight: bold;
-  padding: 12px;
-}
-</style>
