@@ -1,84 +1,147 @@
 <template>
   <div>
-    <el-progress
-      v-for="(item, index) in systemInfo"
-      :key="index"
-      :percentage="item.percentage"
-      :text-inside="true"
-      :stroke-width="18"
-      type="dashboard"
-      :color="getProgressBarColor(item.percentage)"
-    >
-      <div>{{ item.label }}</div>
-    </el-progress>
+    <el-row>
+      <el-col :span="6">
+        <el-card>
+          <div class="card-header">CPU Usage</div>
+          <el-progress
+            type="circle"
+            :percentage="cpuUsage"
+            :stroke-width="8"
+            :color="getProgressColor(cpuUsage)"
+            :format="formatPercentage"
+          ></el-progress>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card>
+          <div class="card-header">Memory Usage</div>
+          <el-progress
+            type="circle"
+            :percentage="memoryUsage"
+            :stroke-width="8"
+            :color="getProgressColor(memoryUsage)"
+            :format="formatPercentage"
+          ></el-progress>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card>
+          <div class="card-header">Network Traffic</div>
+          <el-progress
+            type="circle"
+            :percentage="networkTraffic"
+            :stroke-width="8"
+            :color="getProgressColor(networkTraffic)"
+            :format="formatNumber"
+          ></el-progress>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card>
+          <div class="card-header">Disk Usage</div>
+          <div v-for="disk in diskUsage" :key="disk.name">
+            <div>{{ disk.name }}</div>
+            <el-progress
+              type="circle"
+              :percentage="disk.use"
+              :stroke-width="8"
+              :color="getProgressColor(disk.use)"
+              :format="formatPercentage"
+            ></el-progress>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
 <script>
+import { ref, watchEffect } from "vue";
 import axios from "axios";
 
 export default {
-  data() {
-    return {
-      systemInfo: [
-        { label: "CPU", percentage: 0 },
-        { label: "Memory", percentage: 0 },
-        { label: "Network", percentage: 0 },
-        { label: "Disk", percentage: 0 },
-      ],
-      statusThresholds: {
-        success: 30,
-        warning: 60,
-        danger: 100,
-      },
-    };
+  name: "PerformanceDashboard",
+  components: {
+    // Import Element Plus components if necessary
+    // e.g., ElRow, ElCol, ElCard, ElProgressCircle
   },
-  created() {
-    this.getSystemInfo();
-    setInterval(this.getSystemInfo, 5000);
-  },
-  methods: {
-    getProgressBarColor(percentage) {
-      if (percentage <= this.statusThresholds.success) {
-        return "success";
-      } else if (percentage <= this.statusThresholds.warning) {
-        return "warning";
+  setup() {
+    const cpuUsage = ref(0);
+    const memoryUsage = ref(0);
+    const networkTraffic = ref(0);
+    const diskUsage = ref([]);
+
+    const formatPercentage = (percentage) => {
+      if (Number.isInteger(percentage)) {
+        return `${percentage}%`;
       } else {
-        return "danger";
+        return percentage.toFixed(2) + "%";
       }
-    },
-    async getSystemInfo() {
+    };
+
+    const formatNumber = (value) => {
+      if (Number.isInteger(value)) {
+        return value.toString();
+      } else {
+        if (value < 1024) {
+          return value.toFixed(2) + " B";
+        } else if (value < 1024 * 1024) {
+          return (value / 1024).toFixed(2) + " KB";
+        } else if (value < 1024 * 1024 * 1024) {
+          return (value / (1024 * 1024)).toFixed(2) + " MB";
+        } else {
+          return (value / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+        }
+      }
+    };
+
+    const getProgressColor = (percentage) => {
+      if (percentage < 50) {
+        return "#67C23A"; // Green
+      } else if (percentage < 80) {
+        return "#E6A23C"; // Yellow
+      } else {
+        return "#F56C6C"; // Red
+      }
+    };
+
+    watchEffect(async () => {
       try {
         const response = await axios.get(
           "http://localhost:3000/api/systeminfo"
         );
-        const { cpu, diskLayout, memory, networkStats } = response.data;
-
-        if (cpu && cpu.currentload !== undefined) {
-          this.systemInfo = [
-            {
-              label: "CPU",
-              percentage: parseFloat(cpu.currentload.toFixed(2)),
-            },
-            {
-              label: "Memory",
-              percentage:
-                (parseFloat(memory.used) / parseFloat(memory.total)) * 100,
-            },
-            {
-              label: "Network",
-              percentage: parseFloat(networkStats[0].tx_sec.toFixed(2)) / 1000,
-            },
-            {
-              label: "Disk",
-              percentage: parseFloat(diskLayout[0].use.toFixed(2)),
-            },
-          ];
-        }
+        const systemInfo = response.data;
+        cpuUsage.value = systemInfo.cpu.currentload;
+        memoryUsage.value =
+          (systemInfo.memory.used / systemInfo.memory.total) * 100;
+        networkTraffic.value = systemInfo.networkStats[0].tx_sec;
+        diskUsage.value = systemInfo.diskLayout.map((disk) => ({
+          name: disk.name,
+          use: disk.use,
+        }));
       } catch (error) {
-        console.error("Failed to retrieve system information:", error);
+        console.error("Failed to retrieve system information:", error.message);
       }
-    },
+    });
+
+    return {
+      cpuUsage,
+      memoryUsage,
+      networkTraffic,
+      diskUsage,
+      formatPercentage,
+      formatNumber,
+      getProgressColor,
+    };
   },
 };
 </script>
+
+<style scoped>
+.card-header {
+  font-size: 18px;
+  font-weight: bold;
+  padding: 12px;
+}
+</style>
