@@ -1,9 +1,9 @@
 <template>
   <div>
     <el-row>
-      <el-col :span="6">
-        <el-card>
-          <div class="card-header">CPU Usage</div>
+      <v-col :span="5">
+        <v-card>
+          <div class="card-header">CPU 使用情况</div>
           <el-progress
             type="circle"
             :percentage="cpuUsage"
@@ -11,11 +11,11 @@
             :color="getProgressColor(cpuUsage)"
             :format="formatPercentage"
           ></el-progress>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card>
-          <div class="card-header">Memory Usage</div>
+        </v-card>
+      </v-col>
+      <v-col :span="6">
+        <v-card>
+          <div class="card-header">内存使用情况</div>
           <el-progress
             type="circle"
             :percentage="memoryUsage"
@@ -23,10 +23,10 @@
             :color="getProgressColor(memoryUsage)"
             :format="formatPercentage"
           ></el-progress>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card>
+        </v-card>
+      </v-col>
+      <v-col :span="6">
+        <v-card>
           <div class="card-header">Network Traffic</div>
           <el-progress
             type="circle"
@@ -35,19 +35,22 @@
             :color="getProgressColor(networkTraffic)"
             :format="formatNumber"
           ></el-progress>
-        </el-card>
-      </el-col>
+        </v-card>
+      </v-col>
       <el-col :span="6">
-        <el-card>
-          <div class="card-header">Server Info</div>
+        <v-card>
+          <div class="card-header">服务器信息</div>
           <div>
-            <div>Hostname: {{ serverInfo.hostname }}</div>
-            <div>Type: {{ serverInfo.type }}</div>
-            <div>Platform: {{ serverInfo.platform }}</div>
-            <div>Arch: {{ serverInfo.arch }}</div>
-            <div>Release: {{ serverInfo.release }}</div>
+            <div>主机名: {{ serverInfo.hostname }}</div>
+            <div>
+              内核属性: {{ serverInfo.type }}
+              <div>架构:{{ serverInfo.arch }}</div>
+              <div>版本：{{ serverInfo.release }}</div>
+            </div>
+            <div>CPU 型号：{{ cpuModel }}</div>
+            <div>内存:{{ formattedUsedMem }}\{{ formattedTotalMem }}</div>
           </div>
-        </el-card>
+        </v-card>
       </el-col>
     </el-row>
   </div>
@@ -58,19 +61,24 @@ import { ref, watchEffect } from "vue";
 import axios from "axios";
 
 export default {
-  name: "PerformanceDashboard",
-  components: {},
-  data() {
-    return {
-      serverInfo: {},
-    };
-  },
   setup() {
     const cpuUsage = ref(0);
     const memoryUsage = ref(0);
     const networkTraffic = ref(0);
-    const diskUsage = ref([]);
     const serverInfo = ref({});
+    const formattedUsedMem = ref("");
+    const formattedTotalMem = ref("");
+    const cpuModel = ref("");
+
+    const formatBytes = (bytes) => {
+      const units = ["B", "KB", "MB", "GB", "TB"];
+      let index = 0;
+      while (bytes >= 1024 && index < units.length - 1) {
+        bytes /= 1024;
+        index++;
+      }
+      return `${bytes.toFixed(2)} ${units[index]}`;
+    };
 
     const formatPercentage = (percentage) => {
       if (Number.isInteger(percentage)) {
@@ -105,35 +113,59 @@ export default {
         return "#F56C6C"; // Red
       }
     };
-
-    watchEffect(async () => {
+    const fetchSystemInfo = async () => {
       try {
         const response = await axios.get(
           "http://localhost:3000/api/systeminfo"
         );
         const systemInfo = response.data;
+        const serverMemInfo = response.data;
         cpuUsage.value = systemInfo.cpu.currentLoad;
         memoryUsage.value =
           (systemInfo.memory.used / systemInfo.memory.total) * 100;
         networkTraffic.value = systemInfo.networkStats[0].tx_sec;
-        // diskUsage.value = systemInfo.diskLayout.map((disk) => ({
-        //   name: disk.name,
-        //   use: disk.use,
-        // }));
-        serverInfo.value = systemInfo.serverInfo;
+        serverMemInfo.value = systemInfo.memory;
+        formattedUsedMem.value = formatBytes(serverMemInfo.memory.used);
+        formattedTotalMem.value = formatBytes(serverMemInfo.memory.total);
       } catch (error) {
         console.error("Failed to retrieve system information:", error.message);
       }
+    };
+    const fetchServerInfo = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/api/systeminfo"
+        );
+        const serverInfoData = response.data.serverInfo;
+        serverInfo.value = serverInfoData;
+        cpuModel.value = response.data.serverInfo.cpu.modelValue;
+        // formattedFreeMem.value = formatBytes(serverInfoData.freemem);
+        // formattedTotalMem.value = formatBytes(serverInfoData.totalmem);
+      } catch (error) {
+        console.error("Failed to retrieve system information:", error.message);
+      }
+    };
+
+    watchEffect(async () => {
+      await fetchSystemInfo();
+      await fetchServerInfo();
+      const intrevalId = setInterval(fetchSystemInfo, 5000);
+      return () => {
+        clearInterval(intrevalId);
+      };
     });
 
     return {
       cpuUsage,
+      formatNumber,
+      formatPercentage,
+      formattedTotalMem,
+      formattedUsedMem,
+      cpuModel,
+      getProgressColor,
       memoryUsage,
       networkTraffic,
-      diskUsage,
-      formatPercentage,
-      formatNumber,
-      getProgressColor,
+      serverInfo,
     };
   },
 };

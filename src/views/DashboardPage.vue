@@ -1,32 +1,6 @@
 <template>
   <div>
-    <v-app-bar app>
-      <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-toolbar-title>App</v-toolbar-title>
-    </v-app-bar>
-    <v-navigation-drawer v-model="drawer" app>
-      <v-list>
-        <v-list-item-group>
-          <v-list-item @click="goTo('dashboard')">
-            <v-list-item-icon>
-              <v-icon>mdi-view-dashboard</v-icon>
-            </v-list-item-icon>
-            <v-list-item-content>
-              <v-list-item-title>Dashboard</v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-
-          <v-list-item @click="goTo('yaml-editor')">
-            <v-list-item-icon>
-              <v-icon>mdi-code-braces</v-icon>
-            </v-list-item-icon>
-            <v-list-item-content>
-              <v-list-item-title>YAML Editor</v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-        </v-list-item-group>
-      </v-list>
-    </v-navigation-drawer>
+    <AppBarNav></AppBarNav>
     <h1>Dashboard</h1>
     <p>Total YAML Files: {{ totalFiles }}</p>
     <!-- Add more dashboard information here -->
@@ -38,10 +12,12 @@
 <script>
 import axios from "axios";
 import SystemInfoChart from "@/components/SystemStatus.vue";
+import AppBarNav from "@/components/AppBarNav.vue";
 // import yamlEditor from "@/views/YamlEditor.vue";
 
 export default {
   components: {
+    AppBarNav,
     SystemInfoChart,
     // yamlEditor,
   },

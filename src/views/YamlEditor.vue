@@ -1,5 +1,6 @@
 <template>
   <div>
+    <AppBarNav></AppBarNav>
     <h1>YAML Editor</h1>
     <div v-if="files.length">
       <el-select
@@ -35,8 +36,10 @@
 <script>
 import axios from "axios";
 import yaml from "js-yaml";
+import AppBarNav from "@/components/AppBarNav.vue";
 
 export default {
+  components: { AppBarNav },
   data() {
     return {
       files: [],
