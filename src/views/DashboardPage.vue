@@ -5,7 +5,11 @@
     <p>Total YAML Files: {{ totalFiles }}</p>
     <!-- Add more dashboard information here -->
     <v-divider></v-divider>
-    <system-info-chart></system-info-chart>
+    <el-card><system-info-chart></system-info-chart></el-card>
+    <el-card>
+      <v-card-title>网络情况</v-card-title>
+      <network-chart></network-chart
+    ></el-card>
   </div>
 </template>
 
@@ -13,10 +17,12 @@
 import axios from "axios";
 import SystemInfoChart from "@/components/SystemStatus.vue";
 import AppBarNav from "@/components/AppBarNav.vue";
+import NetworkChart from "@/components/NetworkInfo.vue";
 // import yamlEditor from "@/views/YamlEditor.vue";
 
 export default {
   components: {
+    NetworkChart,
     AppBarNav,
     SystemInfoChart,
     // yamlEditor,

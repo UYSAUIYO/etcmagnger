@@ -25,18 +25,18 @@
           ></el-progress>
         </v-card>
       </v-col>
-      <v-col :span="6">
-        <v-card>
-          <div class="card-header">Network Traffic</div>
-          <el-progress
-            type="circle"
-            :percentage="networkTraffic"
-            :stroke-width="8"
-            :color="getProgressColor(networkTraffic)"
-            :format="formatNumber"
-          ></el-progress>
-        </v-card>
-      </v-col>
+      <!--      <v-col :span="6">-->
+      <!--        <v-card>-->
+      <!--          <div class="card-header">Network Traffic</div>-->
+      <!--          <el-progress-->
+      <!--            type="circle"-->
+      <!--            :percentage="networkTraffic"-->
+      <!--            :stroke-width="8"-->
+      <!--            :color="getProgressColor(networkTraffic)"-->
+      <!--            :format="formatNumber"-->
+      <!--          ></el-progress>-->
+      <!--        </v-card>-->
+      <!--      </v-col>-->
       <el-col :span="6">
         <v-card>
           <div class="card-header">服务器信息</div>
