@@ -90,6 +90,7 @@ export default {
                 display: true,
                 beginAtZero: true,
                 ticks: {
+                  max: 9,
                   callback: function (value) {
                     return formatSpeed(value);
                   },

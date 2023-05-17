@@ -25,18 +25,6 @@
           ></el-progress>
         </v-card>
       </v-col>
-      <!--      <v-col :span="6">-->
-      <!--        <v-card>-->
-      <!--          <div class="card-header">Network Traffic</div>-->
-      <!--          <el-progress-->
-      <!--            type="circle"-->
-      <!--            :percentage="networkTraffic"-->
-      <!--            :stroke-width="8"-->
-      <!--            :color="getProgressColor(networkTraffic)"-->
-      <!--            :format="formatNumber"-->
-      <!--          ></el-progress>-->
-      <!--        </v-card>-->
-      <!--      </v-col>-->
       <el-col :span="6">
         <v-card>
           <div class="card-header">服务器信息</div>
@@ -57,7 +45,7 @@
 </template>
 
 <script>
-import { ref, watchEffect } from "vue";
+import { ref, watchEffect, onBeforeUnmount } from "vue";
 import axios from "axios";
 
 export default {
@@ -69,6 +57,7 @@ export default {
     const formattedUsedMem = ref("");
     const formattedTotalMem = ref("");
     const cpuModel = ref("");
+    let previousData = null; // Store previous data for disposal
 
     const formatBytes = (bytes) => {
       const units = ["B", "KB", "MB", "GB", "TB"];
@@ -103,7 +92,6 @@ export default {
         }
       }
     };
-
     const getProgressColor = (percentage) => {
       if (percentage < 50) {
         return "#67C23A"; // Green
@@ -113,6 +101,7 @@ export default {
         return "#F56C6C"; // Red
       }
     };
+
     const fetchSystemInfo = async () => {
       try {
         const response = await axios.get(
@@ -127,10 +116,28 @@ export default {
         serverMemInfo.value = systemInfo.memory;
         formattedUsedMem.value = formatBytes(serverMemInfo.memory.used);
         formattedTotalMem.value = formatBytes(serverMemInfo.memory.total);
+
+        // Dispose previous data
+        if (previousData) {
+          // Dispose previous serverMemInfo value
+          previousData.serverMemInfo = null;
+          // Dispose previous formattedUsedMem value
+          previousData.formattedUsedMem = null;
+          // Dispose previous formattedTotalMem value
+          previousData.formattedTotalMem = null;
+        }
+
+        // Store current data for disposal in the next request
+        previousData = {
+          serverMemInfo,
+          formattedUsedMem,
+          formattedTotalMem,
+        };
       } catch (error) {
         console.error("Failed to retrieve system information:", error.message);
       }
     };
+
     const fetchServerInfo = async () => {
       try {
         const response = await axios.get(
@@ -149,19 +156,25 @@ export default {
     watchEffect(async () => {
       await fetchSystemInfo();
       await fetchServerInfo();
-      const intrevalId = setInterval(fetchSystemInfo, 5000);
-      return () => {
-        clearInterval(intrevalId);
-      };
+      const intervalId = setInterval(fetchSystemInfo, 5000);
+      onBeforeUnmount(() => {
+        clearInterval(intervalId);
+        // Dispose previous data on component unmount
+        if (previousData) {
+          previousData.serverMemInfo = null;
+          previousData.formattedUsedMem = null;
+          previousData.formattedTotalMem = null;
+        }
+      });
     });
 
     return {
+      cpuModel,
       cpuUsage,
       formatNumber,
       formatPercentage,
       formattedTotalMem,
       formattedUsedMem,
-      cpuModel,
       getProgressColor,
       memoryUsage,
       networkTraffic,
