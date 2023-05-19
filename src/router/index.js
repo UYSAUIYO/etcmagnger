@@ -15,7 +15,7 @@ const routes = [
         path: "yaml-editor",
         component: YamlEditor,
         meta: { requiresAuth: true }, // require authentication to access yaml editor
-      },
+      }
     ],
   },
   {
@@ -31,27 +31,16 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  /**
-   * check if the route requires authentication
-   */
   if (to.matched.some((record) => record.meta.requiresAuth)) {
-    /**
-     * check if user is not authenticated
-     */
     if (!localStorage.getItem("token")) {
-      // if not, redirect to login page
       next({
         path: "/login",
         query: { redirect: to.fullPath },
       });
     } else {
-      // if yes, proceed
       next();
     }
   } else {
-    /**
-     * if the route doesn't require authentication, proceed
-     */
     next();
   }
 });

@@ -10,6 +10,10 @@
       <v-card-title>网络情况</v-card-title>
       <network-chart></network-chart
     ></el-card>
+    <!--    <el-card>-->
+    <!--      <v-card-title>磁盘情况</v-card-title>-->
+    <!--      <dsik-info></dsik-info>-->
+    <!--    </el-card>-->
   </div>
 </template>
 
@@ -18,10 +22,12 @@ import axios from "axios";
 import SystemInfoChart from "@/components/SystemStatus.vue";
 import AppBarNav from "@/components/AppBarNav.vue";
 import NetworkChart from "@/components/NetworkInfo.vue";
+// import DsikInfo from "@/components/DiskInfoChart.vue";
 // import yamlEditor from "@/views/YamlEditor.vue";
 
 export default {
   components: {
+    // DsikInfo,
     NetworkChart,
     AppBarNav,
     SystemInfoChart,
