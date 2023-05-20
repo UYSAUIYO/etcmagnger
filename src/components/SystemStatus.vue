@@ -145,17 +145,27 @@ export default {
         );
         const serverInfoData = response.data.serverInfo;
         serverInfo.value = serverInfoData;
-        cpuModel.value = response.data.serverInfo.cpu.modelValue;
+        // cpuModel.value = response.data.serverInfo.cpu.modelValue;
         // formattedFreeMem.value = formatBytes(serverInfoData.freemem);
         // formattedTotalMem.value = formatBytes(serverInfoData.totalmem);
       } catch (error) {
         console.error("Failed to retrieve system information:", error.message);
       }
     };
+    const fetchCPUInfo = async () => {
+      try {
+        const response = await axios.get("http://localhost:3000/api/cpui");
+        // const CPUInfoData = response.data;
+        cpuModel.value = response.data;
+      } catch (error) {
+        console.error(error);
+      }
+    };
 
     watchEffect(async () => {
       await fetchSystemInfo();
       await fetchServerInfo();
+      await fetchCPUInfo();
       const intervalId = setInterval(fetchSystemInfo, 5000);
       onBeforeUnmount(() => {
         clearInterval(intervalId);

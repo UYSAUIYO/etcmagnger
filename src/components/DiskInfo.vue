@@ -1,0 +1,160 @@
+<template>
+  <div>
+    <canvas ref="chartCanvas"></canvas>
+  </div>
+</template>
+
+<script>
+import { ref, onMounted } from "vue";
+import axios from "axios";
+import Chart from "chart.js/auto";
+
+export default {
+  name: "DiskIOComponent",
+  setup() {
+    const chartCanvas = ref(null);
+    let chartInstance = null;
+    const diskData = {
+      timestamps: [],
+      readBytes: [],
+      writeBytes: [],
+    };
+
+    const fetchData = async () => {
+      try {
+        const response = await axios.get("http://localhost:3000/api/diskinfo");
+        const data = response.data;
+
+        const timestamp = new Date().toLocaleTimeString();
+        diskData.timestamps.push(timestamp);
+        diskData.readBytes.push(data.read_bytes);
+        diskData.writeBytes.push(data.write_bytes);
+
+        updateChart();
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    const formatBytes = (bytes) => {
+      if (bytes === 0) return "0 Bytes";
+
+      const kilobyte = 1024;
+      const units = ["Bytes", "KB", "MB", "GB", "TB"];
+      const i = Math.floor(Math.log(bytes) / Math.log(kilobyte));
+      const value = parseFloat((bytes / Math.pow(kilobyte, i)).toFixed(2));
+      return `${value} ${units[i]}`;
+    };
+
+    const updateChart = () => {
+      if (!chartInstance) {
+        const ctx = chartCanvas.value.getContext("2d");
+        chartInstance = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: diskData.timestamps,
+            datasets: [
+              {
+                label: "读取字节",
+                data: diskData.readBytes,
+                borderColor: "rgba(75, 192, 192, 1)",
+                backgroundColor: "rgba(75, 192, 192, 0.2)",
+                borderWidth: 2,
+                lineTension: 0.4,
+                fill: false,
+              },
+              {
+                label: "写入字节",
+                data: diskData.writeBytes,
+                borderColor: "rgba(255, 99, 132, 1)",
+                backgroundColor: "rgba(255, 99, 132, 0.2)",
+                borderWidth: 2,
+                lineTension: 0.4,
+                fill: false,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                display: true,
+                title: {
+                  display: true,
+                  text: "时间",
+                },
+              },
+              y: {
+                display: true,
+                title: {
+                  display: true,
+                  text: "字节数",
+                },
+                ticks: {
+                  callback: function (value) {
+                    return formatBytes(value);
+                  },
+                },
+              },
+            },
+            plugins: {
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    const bytes = context.raw;
+                    const speed = calculateSpeed(bytes);
+                    return formatBytes(bytes) + " (" + speed + "/s)";
+                  },
+                },
+              },
+            },
+          },
+        });
+      } else {
+        chartInstance.data.labels = diskData.timestamps;
+        chartInstance.data.datasets[0].data = diskData.readBytes;
+        chartInstance.data.datasets[1].data = diskData.writeBytes;
+        chartInstance.update(); // 更新图表数据
+      }
+    };
+
+    const calculateSpeed = (bytes) => {
+      const duration = 5; // 数据请求间隔为5秒
+      const speed = bytes / duration;
+      return formatBytes(speed);
+    };
+
+    onMounted(() => {
+      fetchData();
+      setInterval(fetchData, 5000);
+    });
+
+    return {
+      chartCanvas,
+      diskData,
+      formatBytes,
+    };
+  },
+};
+</script>
+
+<style scoped>
+table {
+  margin-top: 20px;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+
+th {
+  background-color: #f2f2f2;
+}
+
+tbody tr:hover {
+  background-color: #f9f9f9;
+}
+</style>
