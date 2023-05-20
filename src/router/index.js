@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import Login from "../views/LoginPage.vue";
 import Dashboard from "../views/DashboardPage.vue";
 import YamlEditor from "../views/YamlEditor.vue";
+import AboutPage from "@/components/AboutPage.vue";
 
 const routes = [
   { path: "/", redirect: "/login" },
@@ -15,12 +16,22 @@ const routes = [
         path: "yaml-editor",
         component: YamlEditor,
         meta: { requiresAuth: true }, // require authentication to access yaml editor
-      }
+      },
+      {
+        path: "about",
+        component: AboutPage,
+        meta: { requiresAuth: true },
+      },
     ],
   },
   {
     path: "/yaml-editor",
     component: YamlEditor,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/about",
+    component: AboutPage,
     meta: { requiresAuth: true },
   },
 ];

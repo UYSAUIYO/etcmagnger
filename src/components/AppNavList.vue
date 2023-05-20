@@ -13,6 +13,9 @@
       >
         <v-list-item-title>编辑文档</v-list-item-title>
       </v-list-item>
+      <v-list-item prepend-icon="mdi-about" @click="goTo('about')">
+        <v-list-item-title>关于</v-list-item-title>
+      </v-list-item>
     </v-list-item>
   </v-list>
 </template>
