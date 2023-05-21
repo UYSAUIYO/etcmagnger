@@ -9,10 +9,12 @@
             <v-card-subtitle class="text-center"
               >版本号：{{ version }}</v-card-subtitle
             >
-            <v-card-text class="text-center"
-              >最后次开发时间：{{ lastDeveloped }}</v-card-text
+            <v-card-subtitle class="text-center"
+              >最后次开发时间：{{ lastDeveloped }}</v-card-subtitle
             >
-            <p>其他内容</p>
+            <v-card-subtitle class="text-center"
+              >创建了一个基础框架并没有其他功能。</v-card-subtitle
+            >
           </el-card>
         </v-col>
       </v-row>

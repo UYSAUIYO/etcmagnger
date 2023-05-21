@@ -8,12 +8,12 @@
         <v-list-item-title>YAML Editor</v-list-item-title>
       </v-list-item>
       <v-list-item
-        prepend-icon="mdi-File-Edit"
+        prepend-icon="mdi-file-edit"
         @click="goTo('markdown-editor')"
       >
         <v-list-item-title>编辑文档</v-list-item-title>
       </v-list-item>
-      <v-list-item prepend-icon="mdi-about" @click="goTo('about')">
+      <v-list-item prepend-icon="mdi-information" @click="goTo('about')">
         <v-list-item-title>关于</v-list-item-title>
       </v-list-item>
     </v-list-item>
