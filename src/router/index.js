@@ -3,6 +3,7 @@ import Login from "../views/LoginPage.vue";
 import Dashboard from "../views/DashboardPage.vue";
 import YamlEditor from "../views/YamlEditor.vue";
 import AboutPage from "@/components/AboutPage.vue";
+import ReviewPolicyManagementPage from "@/components/ReviewPolicyManagementPage.vue";
 
 const routes = [
   { path: "/", redirect: "/login" },
@@ -16,6 +17,11 @@ const routes = [
         path: "yaml-editor",
         component: YamlEditor,
         meta: { requiresAuth: true }, // require authentication to access yaml editor
+      },
+      {
+        path: "markdowneditor",
+        component: ReviewPolicyManagementPage,
+        meta: {requiresAuth: true}
       },
       {
         path: "about",
@@ -33,6 +39,11 @@ const routes = [
     path: "/about",
     component: AboutPage,
     meta: { requiresAuth: true },
+  },
+  {
+    path: "/markdowneditor",
+    component: ReviewPolicyManagementPage,
+    meta: {requiresAuth: true}
   },
 ];
 
