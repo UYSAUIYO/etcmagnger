@@ -45,7 +45,7 @@
 </template>
 
 <script>
-import { ref, watchEffect, onBeforeUnmount } from "vue";
+import { onBeforeUnmount, ref, watchEffect } from "vue";
 import axios from "axios";
 
 export default {
@@ -155,7 +155,6 @@ export default {
     const fetchCPUInfo = async () => {
       try {
         const response = await axios.get("http://localhost:3000/api/cpui");
-        // const CPUInfoData = response.data;
         cpuModel.value = response.data;
       } catch (error) {
         console.error(error);

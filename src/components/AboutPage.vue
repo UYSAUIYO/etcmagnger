@@ -1,10 +1,8 @@
 <template>
   <div>
     <AppBarNav></AppBarNav>
-    <v-container>
-      <v-row justify="center">
-        <v-col cols="12">
-          <el-card>
+      <div class="container">
+          <div class="card">
             <v-card-title class="text-center">ETC后台管理</v-card-title>
             <v-card-subtitle class="text-center"
               >版本号：{{ version }}</v-card-subtitle
@@ -15,10 +13,9 @@
             <v-card-subtitle class="text-center"
               >创建了一个基础框架并没有其他功能。</v-card-subtitle
             >
-          </el-card>
-        </v-col>
-      </v-row>
-    </v-container>
+          </div>
+
+      </div>
   </div>
 </template>
 
@@ -30,7 +27,7 @@ export default {
   data() {
     return {
       version: "0.1.2-alpha",
-      lastDeveloped: "2023年5月20日",
+      lastDeveloped: "2023年5月25日",
     };
   },
 };
@@ -39,5 +36,18 @@ export default {
 <style scoped>
 .text-center {
   text-align: center;
+}
+.container {
+  background: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.card {
+  background: linear-gradient(to bottom, #ffffff, #f0f0f0); /* Adjust the colors as needed */
+  border: 1px solid #cccccc; /* Adjust the border color as needed */
+  border-radius: 4px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add shadow for depth */
 }
 </style>
