@@ -16,6 +16,9 @@
       <v-list-item prepend-icon="mdi-information" @click="goTo('about')">
         <v-list-item-title>关于</v-list-item-title>
       </v-list-item>
+        <v-list-item prepend-icon="mdi-information" @click="goTo('htmltext')">
+            <v-list-item-title>关于</v-list-item-title>
+        </v-list-item>
     </v-list-item>
   </v-list>
 </template>

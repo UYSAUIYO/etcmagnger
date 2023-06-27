@@ -3,7 +3,7 @@ import Login from "../views/LoginPage.vue";
 import Dashboard from "../views/DashboardPage.vue";
 import YamlEditor from "../views/YamlEditor.vue";
 import AboutPage from "@/components/AboutPage.vue";
-import ReviewPolicyManagementPage from "@/components/ReviewPolicyManagementPage.vue";
+import RulesText from "@/components/RulesText.vue";
 
 const routes = [
   { path: "/", redirect: "/login" },
@@ -19,9 +19,9 @@ const routes = [
         meta: { requiresAuth: true }, // require authentication to access yaml editor
       },
       {
-        path: "markdowneditor",
-        component: ReviewPolicyManagementPage,
-        meta: {requiresAuth: true}
+        path: "htmltext",
+        component: RulesText,
+        meta: {requiresAuth: true},
       },
       {
         path: "about",
@@ -41,9 +41,9 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    path: "/markdowneditor",
-    component: ReviewPolicyManagementPage,
-    meta: {requiresAuth: true}
+    path: "/htmltext",
+    component: RulesText,
+    meta: {requiresAuth: true},
   },
 ];
 
@@ -53,17 +53,17 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  if (to.matched.some((record) => record.meta.requiresAuth)) {
+  if (!to.matched.some((record) => record.meta.requiresAuth)) {
+    next();
+  } else {
     if (!localStorage.getItem("token")) {
       next({
         path: "/login",
-        query: { redirect: to.fullPath },
+        query: {redirect: to.fullPath},
       });
     } else {
       next();
     }
-  } else {
-    next();
   }
 });
 
