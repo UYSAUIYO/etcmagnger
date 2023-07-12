@@ -50,7 +50,7 @@ export default {
     async login() {
       try {
         const response = await axios.post(
-          "http://localhost:3000/api/auth/login",
+          "https://api.etherealcraft.cn/api/auth/login",
           {
             username: this.username,
             password: this.password,
