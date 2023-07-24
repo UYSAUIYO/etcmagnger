@@ -3,7 +3,7 @@
     <el-col :span="12">
       <el-card class="card">
         <el-progress type="circle" :percentage="getCpuInfoCSys()" :stroke-width="10" :color="cpuInfoColor">
-          <span>{{ cpuInfo.cSys }}%</span>
+          <span>{{ cpuInfo.idle }}%</span>
           <br>
           <span>CPU</span>
         </el-progress>
@@ -126,8 +126,8 @@ export default {
       return 0;
     },
     getCpuInfoCSys() {
-      if (this.cpuInfo && this.cpuInfo.cSys) {
-        return parseFloat(this.cpuInfo.cSys);
+      if (this.cpuInfo && this.cpuInfo.idle) {
+        return parseFloat(this.cpuInfo.idle);
       }
       return 0;
     },

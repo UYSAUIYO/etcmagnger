@@ -8,6 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.1.0",
     "@jamescoyle/vue-icon": "^0.1.2",
     "@mdi/js": "^7.2.96",
     "@vue/cli": "^5.0.8",
