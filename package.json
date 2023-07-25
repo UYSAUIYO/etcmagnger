@@ -21,6 +21,7 @@
     "intersection-observer": "^0.12.2",
     "js-yaml": "^4.1.0",
     "mavon-editor": "^3.0.1",
+    "vant": "^4.6.3",
     "vditor": "^3.9.3",
     "vue": "^3.2.13",
     "vue-axios": "^3.5.2",

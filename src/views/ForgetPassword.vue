@@ -1,34 +1,29 @@
 <template>
   <div class="container">
     <span></span>
-    <div v-if="isLogin" class="form-container login-form">
-      <h2>登录</h2>
+    <div class="form-container login-form">
+      <h2>忘记密码</h2>
       <div class="input-wrapper">
-        <el-input v-model="account" type="text" placeholder="账号" class="input-field"/>
-      </div>
-      <div class="input-wrapper">
-        <el-input v-model="password"  placeholder="密码" show-password class="input-field"/>
-      </div>
-      <div class="left-right">
-        <p style="font-size: 13px" >还没有账号？<a class="toggle-link" @click="toggleLoginStatus">点击注册</a></p>
-        <p><a class="toggle-link" @click="forgetPassword">忘记密码</a></p>
-      </div>
-      <button @click="login"  style="vertical-align:middle" class="btn btn-login"><span>登录</span></button>
-    </div>
-
-    <div v-else class="form-container register-form">
-      <h2>注册</h2>
-      <div class="input-wrapper">
-        <el-input v-model="account" type="text" placeholder="账号" class="input-field"/>
+        <van-field v-model="email" @blur="validateEmail" type="text" placeholder="邮箱" class="input-field"/>
       </div>
       <div class="input-wrapper">
-        <el-input v-model="password"  placeholder="密码" show-password class="input-field"/>
+          <van-field class="input-field" v-model="veriCode" center
+          clearable placeholder="请输入验证码"
+          >
+            <template #button>
+              <van-button class="countdown-button" size="small" type="primary" @click="sendVerificationCode" :disabled="!isValidEmail || showCountdown" >
+                {{ showCountdown ? countdownSeconds + 's' : '发送验证码' }}</van-button>
+            </template>
+          </van-field>
       </div>
       <div class="input-wrapper">
-        <el-input v-model="checkpassword"  placeholder="检查密码" show-password class="input-field"/>
+        <van-field v-model="password" placeholder="密码" show-password class="input-field"/>
       </div>
-      <p >已有账号？<a class="toggle-link"  @click="toggleLoginStatus">点击登录</a></p>
-      <button @click="register" class="btn btn-register">注册</button>
+      <div class="input-wrapper">
+        <van-field v-model="checkPassword" placeholder="确认密码" show-password class="input-field"/>
+      </div>
+      <p><a class="toggle-link" @click="backLogin">返回登录</a></p>
+      <button @click="changePassword"  style="vertical-align:middle" class="btn btn-login"><span>修改密码</span></button>
     </div>
   </div>
 </template>
@@ -39,75 +34,97 @@ import axios from 'axios';
 export default {
   data() {
     return {
-      isLogin: true,
-      account: '',
+      email: '',
+      veriCode: '',
       password: '',
-      checkpassword: '',
-      showPassword: false, // 控制密码是否可见
+      checkPassword: '',
+      isValidEmail: false, // 标记邮箱是否通过格式校验
+      showCountdown: false, // 是否显示倒计时按钮
+      countdownSeconds: 60, // 倒计时秒数
     };
   },
   methods: {
-    toggleLoginStatus() {
-      this.isLogin = !this.isLogin;
-      this.account = '';
-      this.password = '';
-      this.checkpassword = '';
+    encrypt(str) {
+      const shift = 3; // 偏移量
+      let encryptedStr = '';
+      for (let i = 0; i < str.length; i++) {
+        const charCode = str.charCodeAt(i);
+        if (charCode >= 65 && charCode <= 90) {
+          encryptedStr += String.fromCharCode(((charCode - 65 + shift) % 26) + 65); // 大写字母的加密
+        } else if (charCode >= 97 && charCode <= 122) {
+          encryptedStr += String.fromCharCode(((charCode - 97 + shift) % 26) + 97); // 小写字母的加密
+        } else if (charCode >= 48 && charCode <= 57) {
+          encryptedStr += String.fromCharCode(charCode); // 数字保持不变
+        }
+      }
+      return encryptedStr;
     },
-    forgetPassword() {
-      this.$router.push('/forgetpassword');
-    },
-    login() {
-      const loginData = {
-        account: this.account,
-        password: this.password,
-      };
 
-      // 发起登录请求
-      axios.post('http://localhost:8080/login', loginData)
+    sendVerificationCode() {
+      if (!this.isValidEmail) {
+        this.showMessage('warning', '请输入正确的邮箱地址！');
+        return;
+      }
+
+      // 获取本机IP地址的方法，请替换为实际实现的代码
+      const ipAddress = axios.get('https://api.ipify.org?format=json')
+          .then((response) => {
+            return response.data.ip;
+          });
+      // 获取点击发送验证码时的时间
+      const currentTime = new Date().getTime();
+
+      // 拼接IP地址和时间，并进行加密
+      const encryptedString = this.encrypt(`${ipAddress}${currentTime}`);
+      // 将加密后的验证码请求码和邮箱一起发送到后端
+      axios.post('http://localhost:8080/sendVerificationCode', {
+        email: this.email,
+        veriCodeRequest: encryptedString,
+      })
           .then(response => {
             const responseData = response.data;
             if (responseData.status === 200) {
-              const returnMessage = responseData.msg
-              const token = responseData.data.token;
-              // 在本地存储中储存token
-              localStorage.setItem('token', token);
-              this.$router.push("/index"); // 跳转到仪表盘页面
-              this.showMessage('success',returnMessage); // 使用ElMessage显示成功消息
+              // 发送验证码成功
+              this.showMessage('success', '验证码已发送，请注意查收！');
             } else {
-              // 登录失败
               this.showMessage('error', responseData.msg);
             }
           })
           .catch(error => {
-            console.error('登录失败:', error);
-            this.showMessage('error', '请求失败，请稍后再试！');
+            console.error('发送验证码失败:', error);
+            this.showMessage('error', '发送验证码失败，请稍后再试！');
           });
     },
-    register() {
-      // 构建注册请求参数
-      const registerData = {
-        account: this.account,
-        password: this.password,
-        checkPassword: this.checkpassword,
-      };
-
-      // 发起注册请求
-      axios.post('http://localhost:8080/register', registerData)
+    validateEmail() {
+        const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        this.isValidEmail = regex.test(this.email); // 更新isValidEmail的值
+        if (!this.isValidEmail) {
+          this.showMessage('warning', '请输入正确的邮箱地址！');
+        }
+    },
+    backLogin() {
+      this.$router.push("/login");
+    },
+    changePassword() {
+      axios.post('http://localhost:8080/forgotpassword', {
+        email: this.email,
+        veriCode: this.veriCode,
+        newPassword: this.password,
+        confirmPassword: this.checkPassword,
+      })
           .then(response => {
             const responseData = response.data;
             if (responseData.status === 200) {
-              // 注册成功
-              this.showMessage('success', '注册成功，请登录！'); // 使用ElMessage显示成功消息
-              // 切换到登录状态
-              this.toggleLoginStatus();
+              // 密码修改成功
+              this.showMessage('success', '密码修改成功，请登录！');
+              this.backLogin(); // 返回登录页面
             } else {
-              // 注册失败
-              this.showMessage('error', responseData.msg); // 使用ElMessage显示错误消息
+              this.showMessage('error', responseData.msg);
             }
           })
           .catch(error => {
-            console.error('注册失败:', error);
-            this.showMessage('error', '注册失败，请稍后再试！'); // 使用ElMessage显示错误消息
+            console.error('密码修改失败:', error);
+            this.showMessage('error', '密码修改失败，请稍后再试！');
           });
     },
     showMessage(type, message) {
@@ -119,7 +136,6 @@ export default {
   },
 };
 </script>
-
 <style scoped>
 .container {
   display: flex;
@@ -244,10 +260,6 @@ export default {
   color: #00305A; /* 冷淡色调文本颜色 */
 }
 
-.register-form {
-  color: #00305A; /* 冷淡色调文本颜色 */
-}
-
 .input-wrapper {
   margin-bottom: 10px;
   position: relative; /* 让切换按钮的位置相对于输入框进行定位 */
@@ -286,9 +298,6 @@ export default {
   background-color: #0074D9;
 }
 
-.btn-register {
-  background-color: #0074D9;
-}
 
 .toggle-link {
   color: #0065ca;

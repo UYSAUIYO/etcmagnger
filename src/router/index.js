@@ -4,10 +4,26 @@ import Dashboard from "../views/DashboardPage.vue";
 import YamlEditor from "../views/YamlEditor.vue";
 import AboutPage from "@/components/AboutPage.vue";
 import RulesText from "@/components/RulesText.vue";
+import Index from "@/views/IndexPage.vue";
+import ForgetPassword from "@/views/ForgetPassword.vue";
 
 const routes = [
-  { path: "/", redirect: "/login" },
-  { path: "/login", component: Login },
+  {
+    path: "/",
+    redirect: "/login"
+  },
+  {
+    path: "/login",
+    component: Login
+  },
+  {
+    path: "/forgetpassword",
+    component: ForgetPassword
+  },
+  {
+    path: "/index",
+    component: Index
+  },
   {
     path: "/dashboard",
     component: Dashboard,

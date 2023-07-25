@@ -1,9 +1,7 @@
 <template>
-  <v-app>
-    <v-main>
-      <router-view />
-    </v-main>
-  </v-app>
+  <div>
+    <router-view />
+  </div>
 </template>
 
 <script>
@@ -17,7 +15,6 @@ export default {
 </script>
 
 <style>
-@import url("https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900");
 body,
 html {
   font-family: "Roboto", sans-serif;
