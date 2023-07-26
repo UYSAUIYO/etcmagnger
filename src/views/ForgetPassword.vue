@@ -2,6 +2,7 @@
   <div class="container">
     <span></span>
     <div class="form-container login-form">
+      <span></span>
       <h2>忘记密码</h2>
       <div class="input-wrapper">
         <van-field v-model="email" @blur="validateEmail" type="text" placeholder="邮箱" class="input-field"/>
@@ -30,6 +31,7 @@
 
 <script>
 import axios from 'axios';
+import { message } from 'ant-design-vue';
 
 export default {
   data() {
@@ -62,7 +64,10 @@ export default {
 
     sendVerificationCode() {
       if (!this.isValidEmail) {
-        this.showMessage('warning', '请输入正确的邮箱地址！');
+        // ElMessage({
+        //   message: '请正确输入邮箱地址！',
+        //   type: 'error',
+        // })
         return;
       }
 
@@ -73,33 +78,32 @@ export default {
           });
       // 获取点击发送验证码时的时间
       const currentTime = new Date().getTime();
-
-      // 拼接IP地址和时间，并进行加密
       const encryptedString = this.encrypt(`${ipAddress}${currentTime}`);
       // 将加密后的验证码请求码和邮箱一起发送到后端
       axios.post('http://localhost:8080/sendVerificationCode', {
         email: this.email,
         veriCodeRequest: encryptedString,
+        type: 'forgotPassword',
       })
           .then(response => {
             const responseData = response.data;
             if (responseData.status === 200) {
               // 发送验证码成功
-              this.showMessage('success', '验证码已发送，请注意查收！');
+              message.success('验证码已发送，请注意查收！');
             } else {
-              this.showMessage('error', responseData.msg);
+              message.error(responseData.msg)
             }
           })
           .catch(error => {
             console.error('发送验证码失败:', error);
-            this.showMessage('error', '发送验证码失败，请稍后再试！');
+            message.error('发送验证码失败，请稍后再试！')
           });
     },
     validateEmail() {
         const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         this.isValidEmail = regex.test(this.email); // 更新isValidEmail的值
         if (!this.isValidEmail) {
-          this.showMessage('warning', '请输入正确的邮箱地址！');
+          message.error('请正确输入邮箱地址！')
         }
     },
     backLogin() {
@@ -115,26 +119,19 @@ export default {
           .then(response => {
             const responseData = response.data;
             if (responseData.status === 200) {
-              // 密码修改成功
-              this.showMessage('success', '密码修改成功，请登录！');
+              message.success('密码修改成功，请登录！')
               this.backLogin(); // 返回登录页面
             } else {
-              this.showMessage('error', responseData.msg);
+              message.error(responseData.msg)
             }
           })
           .catch(error => {
             console.error('密码修改失败:', error);
-            this.showMessage('error', '密码修改失败，请稍后再试！');
+            message.error('密码修改失败，请稍后再试！')
           });
     },
-    showMessage(type, message) {
-      this.$message({
-        type: type,
-        message: message,
-      });
-    },
   },
-};
+}
 </script>
 <style scoped>
 .container {
@@ -281,7 +278,7 @@ export default {
   font-family: inherit;
   text-align: center;
   font-size: 13px;
-  box-shadow: 0px 14px 56px -11px #0074D9;
+  box-shadow: 0 14px 56px -11px #0074D9;
   width: 10em;
   padding: 1em;
   transition: all 0.4s;
@@ -304,10 +301,5 @@ export default {
   cursor: pointer;
   text-decoration: none;
   font-size:13px;
-}
-.left-right{
-  display: flex;
-  justify-content: space-evenly;
-  align-items: center;
 }
 </style>
