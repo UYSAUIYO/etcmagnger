@@ -2,51 +2,130 @@
   <div class="container">
     <span></span>
     <div v-if="isLogin" class="form-container login-form">
+      <span></span>
       <h2>登录</h2>
       <div class="input-wrapper">
-        <el-input v-model="account" type="text" placeholder="账号" class="input-field"/>
+        <van-field v-model="account" type="text" placeholder="账号" class="input-field" center/>
       </div>
+      <van-divider></van-divider>
       <div class="input-wrapper">
-        <el-input v-model="password"  placeholder="密码" show-password class="input-field"/>
+        <van-field v-model="password" type="password" placeholder="密码"  class="input-field" center/>
       </div>
       <div class="left-right">
         <p style="font-size: 13px" >还没有账号？<a class="toggle-link" @click="toggleLoginStatus">点击注册</a></p>
         <p><a class="toggle-link" @click="forgetPassword">忘记密码</a></p>
       </div>
-      <button @click="login"  style="vertical-align:middle" class="btn btn-login"><span>登录</span></button>
+      <button @click="login"  style="vertical-align:middle" class="btn btn-login"><span><a>登录</a></span></button>
     </div>
 
     <div v-else class="form-container register-form">
+      <span></span>
       <h2>注册</h2>
       <div class="input-wrapper">
-        <el-input v-model="account" type="text" placeholder="账号" class="input-field"/>
+        <van-field v-model="email" @blur="validateEmail" type="text" placeholder="邮箱" class="input-field"/>
       </div>
       <div class="input-wrapper">
-        <el-input v-model="password"  placeholder="密码" show-password class="input-field"/>
+        <van-field class="input-field" v-model="veriCode" center
+                   clearable placeholder="请输入验证码"
+        >
+          <template #button>
+            <van-button size="small" type="primary" @click="sendVerificationCode" :disabled="!isValidEmail || showCountdown" >
+              {{ showCountdown ? countdownSeconds + 's' : '发送验证码' }}</van-button>
+          </template>
+        </van-field>
+      </div>
+      <van-divider></van-divider>
+      <div class="input-wrapper">
+        <van-field v-model="account" type="text" placeholder="用户名" class="input-field"/>
+      </div>
+      <van-divider></van-divider>
+      <div class="input-wrapper">
+        <van-field v-model="password" type="password"  placeholder="密码"  class="input-field"/>
       </div>
       <div class="input-wrapper">
-        <el-input v-model="checkpassword"  placeholder="检查密码" show-password class="input-field"/>
+        <van-field v-model="checkpassword" type="password"  placeholder="重复密码"  class="input-field"/>
       </div>
-      <p >已有账号？<a class="toggle-link"  @click="toggleLoginStatus">点击登录</a></p>
-      <button @click="register" class="btn btn-register">注册</button>
+      <van-divider></van-divider>
+      <p >已有账号？<a class="toggle-link"  @click="toggleLoginStatus">返回登录</a></p>
+      <button @click="register" class="btn btn-register"><span><a>注册</a></span></button>
     </div>
   </div>
 </template>
 
 <script>
 import axios from 'axios';
+import {message} from 'ant-design-vue';
 
 export default {
   data() {
     return {
+      email: '',
+      veriCode: '',
       isLogin: true,
       account: '',
       password: '',
       checkpassword: '',
       showPassword: false, // 控制密码是否可见
+      isValidEmail: false, // 标记邮箱是否通过格式校验
+      showCountdown: false, // 是否显示倒计时按钮
+      countdownSeconds: 60, // 倒计时秒数
     };
   },
   methods: {
+    encrypt(str) {
+      const shift = 4; // 偏移量
+      let encryptedStr = '';
+      for (let i = 0; i < str.length; i++) {
+        const charCode = str.charCodeAt(i);
+        if (charCode >= 65 && charCode <= 90) {
+          encryptedStr += String.fromCharCode(((charCode - 65 + shift) % 26) + 65); // 大写字母的加密
+        } else if (charCode >= 97 && charCode <= 122) {
+          encryptedStr += String.fromCharCode(((charCode - 97 + shift) % 26) + 97); // 小写字母的加密
+        } else if (charCode >= 48 && charCode <= 57) {
+          encryptedStr += String.fromCharCode(charCode); // 数字保持不变
+        }
+      }
+      return encryptedStr;
+    },
+    sendVerificationCode() {
+      if (!this.isValidEmail) {
+        message.warning('请输入正确的邮箱地址！')
+        return;
+      }
+
+      // 获取本机IP地址的方法，请替换为实际实现的代码
+      const ipAddress = axios.get('https://api.ipify.org?format=json')
+          .then((response) => {
+            return response.data.ip;
+          });
+      const currentTime = new Date().getTime();
+      const encryptedString = this.encrypt(`${ipAddress}${currentTime}`);
+      axios.post('http://localhost:8080/sendVerificationCode', {
+        email: this.email,
+        veriCodeRequest: encryptedString,
+        type: 'register',
+      })
+          .then(response => {
+            const responseData = response.data;
+            if (responseData.status === 200) {
+              // 发送验证码成功
+              message.success('验证码已发送，请注意查收！')
+            } else {
+              message.error(responseData.msg)
+            }
+          })
+          .catch(error => {
+            console.error('发送验证码失败:', error);
+            message.error('发送验证码失败，请稍后再试！')
+          });
+    },
+    validateEmail() {
+      const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      this.isValidEmail = regex.test(this.email); // 更新isValidEmail的值
+      if (!this.isValidEmail) {
+        message.warning('请输入正确的邮箱地址！')
+      }
+    },
     toggleLoginStatus() {
       this.isLogin = !this.isLogin;
       this.account = '';
@@ -72,20 +151,25 @@ export default {
               // 在本地存储中储存token
               localStorage.setItem('token', token);
               this.$router.push("/index"); // 跳转到仪表盘页面
-              this.showMessage('success',returnMessage); // 使用ElMessage显示成功消息
+              // this.showMessage('success',returnMessage); // 使用ElMessage显示成功消息
+              message.success(returnMessage)
             } else {
               // 登录失败
-              this.showMessage('error', responseData.msg);
+              // this.showMessage('error', responseData.msg);
+              message.error(responseData.msg)
             }
           })
           .catch(error => {
             console.error('登录失败:', error);
-            this.showMessage('error', '请求失败，请稍后再试！');
+            // this.showMessage('error', '请求失败，请稍后再试！');
+            message.error('请求失败，请稍后再试！')
           });
     },
     register() {
       // 构建注册请求参数
       const registerData = {
+        email: this.email,
+        veriCode: this.veriCode,
         account: this.account,
         password: this.password,
         checkPassword: this.checkpassword,
@@ -97,24 +181,20 @@ export default {
             const responseData = response.data;
             if (responseData.status === 200) {
               // 注册成功
-              this.showMessage('success', '注册成功，请登录！'); // 使用ElMessage显示成功消息
+              message.success('注册成功，请登录！')
               // 切换到登录状态
               this.toggleLoginStatus();
             } else {
               // 注册失败
-              this.showMessage('error', responseData.msg); // 使用ElMessage显示错误消息
+              // this.showMessage('error', responseData.msg); // 使用ElMessage显示错误消息
+              message.error(responseData.msg)
             }
           })
           .catch(error => {
             console.error('注册失败:', error);
-            this.showMessage('error', '注册失败，请稍后再试！'); // 使用ElMessage显示错误消息
+            // this.showMessage('error', '注册失败，请稍后再试！'); // 使用ElMessage显示错误消息
+            message.error('注册失败，请稍后再试！')
           });
-    },
-    showMessage(type, message) {
-      this.$message({
-        type: type,
-        message: message,
-      });
     },
   },
 };
@@ -173,7 +253,7 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 5;
+  z-index: -1;
   pointer-events: none;
 }
 
@@ -201,7 +281,7 @@ export default {
   opacity: 1;
 }
 
-.box span::after {
+.form-container span::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -217,12 +297,12 @@ export default {
   animation-delay: -1s;
 }
 
-.container span:after {
+.form-container span:after {
   bottom: -40px;
-  right: 40px;
+  right: 100px;
   width: 50px;
   height: 50px;
-  opacity: 1;
+  opacity: 2;
 }
 
 .container .form-container {
@@ -254,8 +334,8 @@ export default {
 }
 
 .input-field {
-  width: 90%; /* 输入框限制最大大小比登录框小10% */
-  padding: 10px;
+  width: 100%; /* 输入框限制最大大小比登录框小10% */
+  padding: 5px;
   border-radius: 4px;
   outline: none;
 }
@@ -263,19 +343,21 @@ export default {
 .btn {
   display: inline-block;
   border-radius: 7px;
+  z-index: 1;
   border: none;
   background: #0074D9;
-  color: white;
+  color: #00305A ;
   font-family: inherit;
   text-align: center;
   font-size: 13px;
-  box-shadow: 0px 14px 56px -11px #0074D9;
+  box-shadow: 0 14px 56px -11px #0074D9;
   width: 10em;
   padding: 1em;
   transition: all 0.4s;
   cursor: pointer;
 }
 .btn span{
+  z-index: inherit;
   cursor: pointer;
   display: inline-block;
   position: relative;
