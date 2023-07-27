@@ -5,6 +5,7 @@ import YamlEditor from "../views/YamlEditor.vue";
 import AboutPage from "@/components/AboutPage.vue";
 import RulesText from "@/components/RulesText.vue";
 import Index from "@/views/IndexPage.vue";
+import PhotoWall from "@/components/Index/PhotoWall.vue";
 import ForgetPassword from "@/views/ForgetPassword.vue";
 
 const routes = [
@@ -22,7 +23,20 @@ const routes = [
   },
   {
     path: "/index",
-    component: Index
+    component: Index,
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path:"photowall",
+        component: PhotoWall,
+        meta: { requiresAuth: true },
+      },
+      {
+        path: "blog",
+        component: () => import("@/components/Index/BlogPage.vue"),
+        meta: { requiresAuth: true },
+      }
+    ]
   },
   {
     path: "/dashboard",

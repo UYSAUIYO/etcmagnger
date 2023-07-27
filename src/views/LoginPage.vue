@@ -29,8 +29,8 @@
                    clearable placeholder="请输入验证码"
         >
           <template #button>
-            <van-button size="small" type="primary" @click="sendVerificationCode" :disabled="!isValidEmail || showCountdown" >
-              {{ showCountdown ? countdownSeconds + 's' : '发送验证码' }}</van-button>
+            <van-button class="send-btn" size="small" type="primary" @click="sendVerificationCode" :disabled="!isValidEmail || showCountdown" >
+              {{ showCountdown ? countdownSeconds + 's' : '发送验证码' }}<span></span></van-button>
           </template>
         </van-field>
       </div>
@@ -150,18 +150,14 @@ export default {
               const token = responseData.data.token;
               // 在本地存储中储存token
               localStorage.setItem('token', token);
-              this.$router.push("/index"); // 跳转到仪表盘页面
-              // this.showMessage('success',returnMessage); // 使用ElMessage显示成功消息
+              this.$router.push("/index/photowall");
               message.success(returnMessage)
             } else {
-              // 登录失败
-              // this.showMessage('error', responseData.msg);
               message.error(responseData.msg)
             }
           })
           .catch(error => {
             console.error('登录失败:', error);
-            // this.showMessage('error', '请求失败，请稍后再试！');
             message.error('请求失败，请稍后再试！')
           });
     },
@@ -186,13 +182,11 @@ export default {
               this.toggleLoginStatus();
             } else {
               // 注册失败
-              // this.showMessage('error', responseData.msg); // 使用ElMessage显示错误消息
               message.error(responseData.msg)
             }
           })
           .catch(error => {
             console.error('注册失败:', error);
-            // this.showMessage('error', '注册失败，请稍后再试！'); // 使用ElMessage显示错误消息
             message.error('注册失败，请稍后再试！')
           });
     },
@@ -201,6 +195,16 @@ export default {
 </script>
 
 <style scoped>
+.send-btn{
+  padding: 0;
+  border: none;
+  background: #0074D9;
+  color: #00305A ;
+  font-family: inherit;
+  text-align: center;
+  font-size: 13px;
+  box-shadow: 0 14px 56px -11px #0074D9;
+}
 .container {
   display: flex;
   justify-content: center;
