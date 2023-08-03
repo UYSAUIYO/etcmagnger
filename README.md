@@ -1,4 +1,4 @@
-# etcmagnger
+# etcmagnger 即将重构V
 
 ## Project setup
 ```
